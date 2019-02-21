@@ -1,36 +1,21 @@
-FROM alpine
+FROM ubuntu:16.04
 
-LABEL maintainer "Roman Dodin <dodin.roman@gmail.com>"
-LABEL description "Nginx + uWSGI + Flask based on Alpine Linux and managed by Supervisord"
-
-# Copy python requirements file
-COPY requirements.txt /tmp/requirements.txt
-
-RUN mkdir /app && cp -R ./caspyr ./app
-
-RUN apk add --no-cache \
+RUN apt update && apt install -y \
     python3 \
-    bash \
-    build-essentials \
+    python3-pip \
     libssl-dev \
     libffi-dev \
     python3-setuptools \
     supervisor \
-    python3-dev \
-    git \
-    linux-headers && \
-    python3 -m ensurepip && \
-    rm -r /usr/lib/python*/ensurepip && \
-    pip3 install --upgrade pip setuptools && \
-    pip3 install -r /tmp/requirements.txt && \
+    python3-dev && \
     pip3 install gunicorn flask flask_cors requests
 
 # Copy the Supervidor config
 COPY app.conf /etc/supervisor/conf.d/
 
+RUN whoami && mkdir /app
+
+ADD caspyr /app/caspyr
 
 # Add demo app
-COPY ./app /app
 WORKDIR /app
-
-RUN supervisorctl reread && systemctl restart supervisor && supervisorctl status
